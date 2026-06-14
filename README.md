@@ -9,6 +9,8 @@ Sakura 是一个轻量级 Chrome 扩展，用来增强 Gemini、Google AI Studio
 
 项目使用 Manifest V3，纯原生 JavaScript / CSS 实现，无构建步骤，无第三方运行依赖。
 
+如果你只是想安装使用，可以直接看：[保姆级安装与使用教程](TUTORIAL.md)。
+
 ## 功能概览
 
 ### 1. 可视化放大
