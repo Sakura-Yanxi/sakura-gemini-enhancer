@@ -1,6 +1,7 @@
 // 划词翻译：选中英文文本，在后台查询词典/翻译并弹窗显示
 
 let popup = null;
+let translationRequestId = 0;
 
 // 词性英文转缩写
 const POS_MAP = {
@@ -30,6 +31,7 @@ function createPopup() {
 
 function showPopup(text, x, y) {
   const el = createPopup();
+  const requestId = ++translationRequestId;
   el.querySelector('.translation-word').textContent = text;
   el.querySelector('.translation-content').innerHTML =
     '<div class="translation-loading">翻译中...</div>';
@@ -47,6 +49,8 @@ function showPopup(text, x, y) {
 
   // 后台查询（绕过页面 CSP）
   chrome.runtime.sendMessage({ action: 'translate', word: text }, (data) => {
+    if (requestId !== translationRequestId) return;
+
     const content = el.querySelector('.translation-content');
     if (chrome.runtime.lastError) {
       content.innerHTML = '<div class="translation-error">连接后台失败，请重试</div>';
@@ -60,6 +64,16 @@ function hidePopup() {
   if (popup) popup.style.display = 'none';
 }
 
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
 // 渲染翻译结果
 function render(data) {
   if (!data) return '<div class="translation-error">未找到翻译</div>';
@@ -69,32 +83,32 @@ function render(data) {
   if (data.source === 'youdao') {
     if (data.usphone || data.ukphone) {
       html += '<div class="translation-phonetic">';
-      if (data.usphone) html += `<span>美 [${data.usphone}]</span> `;
-      if (data.ukphone) html += `<span>英 [${data.ukphone}]</span>`;
+      if (data.usphone) html += `<span>美 [${escapeHTML(data.usphone)}]</span> `;
+      if (data.ukphone) html += `<span>英 [${escapeHTML(data.ukphone)}]</span>`;
       html += '</div>';
     }
     html += '<div class="translation-meanings">';
-    for (const item of data.trs) {
+    for (const item of data.trs || []) {
       const { pos, meaning } = splitPos(item);
-      html += `<div class="translation-meaning"><span class="pos-tag">${pos}</span>${meaning}</div>`;
+      html += `<div class="translation-meaning"><span class="pos-tag">${escapeHTML(pos)}</span>${escapeHTML(meaning)}</div>`;
     }
     html += '</div>';
   } else if (data.source === 'freedict') {
     if (data.phonetic) {
-      html += `<div class="translation-phonetic"><span>${data.phonetic}</span></div>`;
+      html += `<div class="translation-phonetic"><span>${escapeHTML(data.phonetic)}</span></div>`;
     }
     html += '<div class="translation-meanings">';
-    for (const m of data.meanings) {
+    for (const m of data.meanings || []) {
       const pos = POS_MAP[m.pos?.toLowerCase()] || m.pos;
-      for (const def of m.definitions) {
+      for (const def of m.definitions || []) {
         const short = def.length > 50 ? def.slice(0, 50) + '...' : def;
-        html += `<div class="translation-meaning"><span class="pos-tag">${pos}</span>${short}</div>`;
+        html += `<div class="translation-meaning"><span class="pos-tag">${escapeHTML(pos)}</span>${escapeHTML(short)}</div>`;
       }
     }
     html += '</div>';
   } else if (data.source === 'phrase') {
     // 词组/句子：整段译文
-    html += `<div class="translation-meanings"><div class="translation-meaning">${data.text}</div></div>`;
+    html += `<div class="translation-meanings"><div class="translation-meaning">${escapeHTML(data.text)}</div></div>`;
   }
 
   return html || '<div class="translation-error">未找到翻译</div>';
@@ -119,9 +133,15 @@ document.addEventListener('mouseup', (e) => {
   if (popup && popup.contains(e.target)) return;
 
   setTimeout(() => {
-    const text = window.getSelection().toString().trim();
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      hidePopup();
+      return;
+    }
+
+    const text = selection.toString().trim();
     if (isEnglishSelection(text)) {
-      const r = window.getSelection().getRangeAt(0).getBoundingClientRect();
+      const r = selection.getRangeAt(0).getBoundingClientRect();
       showPopup(text, r.left + r.width / 2, r.bottom + window.scrollY);
     } else if (popup) {
       hidePopup();

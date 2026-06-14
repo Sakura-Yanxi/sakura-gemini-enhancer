@@ -12,7 +12,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // 入口：单个单词查词典，词组 / 句子走整段翻译
 async function fetchTranslation(input) {
+  if (typeof input !== 'string') return null;
+
   const text = input.trim();
+  if (!text || text.length > 200) return null;
+
   const isSingleWord = /^[a-zA-Z]+(?:[-'][a-zA-Z]+)*$/.test(text);
 
   if (!isSingleWord) return translatePhrase(text);
@@ -50,11 +54,17 @@ async function lookupWord(word) {
   const yd = await fetchJSON(`https://dict.youdao.com/jsonapi?q=${q}`);
   const w = yd?.ec?.word?.[0];
   if (w) {
+    const trs = (w.trs || [])
+      .map((tr) => tr?.tr?.[0]?.l?.i?.[0])
+      .filter(Boolean);
+
+    if (!trs.length) return null;
+
     return {
       source: 'youdao',
       usphone: w.usphone || '',
       ukphone: w.ukphone || '',
-      trs: (w.trs || []).map((tr) => tr.tr[0].l.i[0]),
+      trs,
     };
   }
 

@@ -67,10 +67,20 @@ function scan() {
   findVizFrames().forEach(addButton);
 }
 
+let scanScheduled = false;
+
+function scheduleScan() {
+  if (scanScheduled) return;
+  scanScheduled = true;
+  requestAnimationFrame(() => {
+    scanScheduled = false;
+    scan();
+  });
+}
+
 // 初始多次扫描（内容加载有延迟）
-[1000, 2500, 5000].forEach((t) => setTimeout(scan, t));
+[1000, 2500, 5000].forEach((t) => setTimeout(scheduleScan, t));
 
 // 持续监听 DOM 变化
-const observer = new MutationObserver(() => scan());
+const observer = new MutationObserver(() => scheduleScan());
 observer.observe(document.body, { childList: true, subtree: true });
-
