@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.1 - 2026-07-07
+
+### Fixed
+
+- Added Edge/Microsoft translation fallback for selected sentences.
+- Normalized selected whitespace before translation requests.
+- Reduced "未找到翻译" cases when Google or MyMemory return 429 rate-limit errors.
+
 ## v1.0.0 - 2026-06-14
 
 Initial public release of Sakura.

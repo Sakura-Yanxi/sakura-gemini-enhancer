@@ -1,6 +1,11 @@
 // 后台 service worker：划词翻译的网络请求
 // content script 受 Gemini 页面 CSP 限制无法直接 fetch，故请求统一在此发起
 
+let edgeTranslateAuth = {
+  token: '',
+  expiresAt: 0,
+};
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'translate') {
     fetchTranslation(request.word)
@@ -14,7 +19,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function fetchTranslation(input) {
   if (typeof input !== 'string') return null;
 
-  const text = input.trim();
+  const text = input.trim().replace(/\s+/g, ' ');
   if (!text || text.length > 200) return null;
 
   const isSingleWord = /^[a-zA-Z]+(?:[-'][a-zA-Z]+)*$/.test(text);
@@ -34,12 +39,25 @@ async function fetchTranslation(input) {
 }
 
 // 带超时的 fetch + JSON，避免连不上的端点无限挂起
-async function fetchJSON(url, ms = 6000) {
+async function fetchJSON(url, ms = 6000, options = {}) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms);
   try {
-    const res = await fetch(url, { signal: ctrl.signal });
+    const res = await fetch(url, { ...options, signal: ctrl.signal });
     return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchText(url, ms = 6000, options = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { ...options, signal: ctrl.signal });
+    return res.ok ? await res.text() : null;
   } catch {
     return null;
   } finally {
@@ -89,6 +107,9 @@ async function translatePhrase(text) {
   const q = encodeURIComponent(text);
 
   const sources = [
+    // Edge/Microsoft 翻译：先取临时 token，再请求翻译接口，作为长句主力兜底
+    async () => translateWithEdge(text),
+
     // Google 端点（质量最好，国内连不上则靠超时跳过）
     async () => {
       const d = await fetchJSON(
@@ -122,4 +143,41 @@ async function translatePhrase(text) {
   }
 
   return null;
+}
+
+async function getEdgeTranslateToken() {
+  const now = Date.now();
+  if (edgeTranslateAuth.token && edgeTranslateAuth.expiresAt > now) {
+    return edgeTranslateAuth.token;
+  }
+
+  const token = await fetchText('https://edge.microsoft.com/translate/auth', 5000);
+  if (!token) return null;
+
+  edgeTranslateAuth = {
+    token,
+    expiresAt: now + 8 * 60 * 1000,
+  };
+  return token;
+}
+
+async function translateWithEdge(text) {
+  const token = await getEdgeTranslateToken();
+  if (!token) return null;
+
+  const data = await fetchJSON(
+    'https://api-edge.cognitive.microsofttranslator.com/translate?from=en&to=zh-Hans&api-version=3.0&includeSentenceLength=true',
+    8000,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify([{ Text: text }]),
+    }
+  );
+
+  const tran = data?.[0]?.translations?.[0]?.text;
+  return tran && /[一-龥]/.test(tran) ? tran : null;
 }

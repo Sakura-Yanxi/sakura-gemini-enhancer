@@ -1,13 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Sakura",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "放大 Gemini 可视化（全屏）+ 划词翻译",
   "host_permissions": [
     "https://dict.youdao.com/*",
     "https://api.dictionaryapi.dev/*",
     "https://translate.googleapis.com/*",
-    "https://api.mymemory.translated.net/*"
+    "https://api.mymemory.translated.net/*",
+    "https://edge.microsoft.com/*",
+    "https://api-edge.cognitive.microsofttranslator.com/*"
   ],
   "background": {
     "service_worker": "background.js"
