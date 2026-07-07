@@ -113,6 +113,7 @@ Sakura 是一个轻量级 Chrome 扩展，用来增强 Gemini、Google AI Studio
 | `https://api.mymemory.translated.net/*` | 查询 MyMemory 翻译结果 |
 | `https://edge.microsoft.com/*` | 获取 Edge/Microsoft 翻译临时认证 |
 | `https://api-edge.cognitive.microsofttranslator.com/*` | 查询 Edge/Microsoft 翻译结果 |
+| `https://api.github.com/*` | 检查 GitHub Release 是否有新版本 |
 
 扩展没有声明 `storage`、`cookies`、`tabs` 等权限。
 
@@ -186,6 +187,8 @@ Sakura 的做法是：
 ## 开发与调试
 
 本项目没有打包流程，修改源码后直接刷新扩展即可。
+
+未上架 Chrome Web Store 时，扩展不能真正自动替换本地文件。Sakura 会在支持的网站上检查 GitHub 最新 Release；如果发现新版本，会在页面右下角提示并提供下载链接。
 
 建议的调试流程：
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.2 - 2026-07-07
+
+### Added
+
+- Added GitHub Release update checker.
+- Shows an in-page notice when a newer Sakura version is available.
+
 ## v1.0.1 - 2026-07-07
 
 ### Fixed

@@ -6,12 +6,24 @@ let edgeTranslateAuth = {
   expiresAt: 0,
 };
 
+let updateCheckCache = {
+  checkedAt: 0,
+  result: null,
+};
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'translate') {
     fetchTranslation(request.word)
       .then((result) => sendResponse(result))
       .catch(() => sendResponse(null));
     return true; // 异步响应，保持通道开放
+  }
+
+  if (request.action === 'checkUpdate') {
+    checkForUpdate()
+      .then((result) => sendResponse(result))
+      .catch(() => sendResponse(null));
+    return true;
   }
 });
 
@@ -180,4 +192,57 @@ async function translateWithEdge(text) {
 
   const tran = data?.[0]?.translations?.[0]?.text;
   return tran && /[一-龥]/.test(tran) ? tran : null;
+}
+
+async function checkForUpdate() {
+  const now = Date.now();
+  if (updateCheckCache.result && now - updateCheckCache.checkedAt < 6 * 60 * 60 * 1000) {
+    return updateCheckCache.result;
+  }
+
+  const currentVersion = chrome.runtime.getManifest().version;
+  const release = await fetchJSON(
+    'https://api.github.com/repos/Sakura-Yanxi/sakura-gemini-enhancer/releases/latest',
+    8000,
+    {
+      headers: {
+        accept: 'application/vnd.github+json',
+      },
+    }
+  );
+
+  const latestVersion = normalizeVersion(release?.tag_name);
+  const asset = (release?.assets || []).find((item) => item.name?.endsWith('.zip'));
+  const result = {
+    currentVersion,
+    latestVersion,
+    hasUpdate: Boolean(latestVersion && isNewerVersion(latestVersion, currentVersion)),
+    releaseUrl: release?.html_url || '',
+    downloadUrl: asset?.browser_download_url || release?.html_url || '',
+  };
+
+  updateCheckCache = {
+    checkedAt: now,
+    result,
+  };
+  return result;
+}
+
+function normalizeVersion(version) {
+  return String(version || '').trim().replace(/^v/i, '');
+}
+
+function isNewerVersion(latest, current) {
+  const latestParts = normalizeVersion(latest).split('.').map((part) => parseInt(part, 10) || 0);
+  const currentParts = normalizeVersion(current).split('.').map((part) => parseInt(part, 10) || 0);
+  const len = Math.max(latestParts.length, currentParts.length);
+
+  for (let i = 0; i < len; i += 1) {
+    const a = latestParts[i] || 0;
+    const b = currentParts[i] || 0;
+    if (a > b) return true;
+    if (a < b) return false;
+  }
+
+  return false;
 }

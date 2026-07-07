@@ -2,6 +2,7 @@
 
 let popup = null;
 let translationRequestId = 0;
+let updateNotice = null;
 
 // 词性英文转缩写
 const POS_MAP = {
@@ -150,3 +151,61 @@ document.addEventListener('mouseup', (e) => {
 });
 
 document.addEventListener('scroll', hidePopup, true);
+
+setTimeout(checkExtensionUpdate, 2500);
+
+function checkExtensionUpdate() {
+  if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) return;
+
+  chrome.runtime.sendMessage({ action: 'checkUpdate' }, (update) => {
+    if (chrome.runtime.lastError || !update?.hasUpdate) return;
+    if (isUpdateDismissed(update.latestVersion)) return;
+
+    showUpdateNotice(update);
+  });
+}
+
+function isUpdateDismissed(version) {
+  try {
+    return localStorage.getItem('sakura-update-dismissed-version') === version;
+  } catch {
+    return false;
+  }
+}
+
+function dismissUpdateNotice(version) {
+  try {
+    localStorage.setItem('sakura-update-dismissed-version', version);
+  } catch {
+    // 忽略站点禁用 localStorage 的情况
+  }
+}
+
+function showUpdateNotice(update) {
+  if (updateNotice) updateNotice.remove();
+
+  updateNotice = document.createElement('div');
+  updateNotice.className = 'sakura-update-notice';
+  updateNotice.innerHTML = `
+    <button class="sakura-update-close" type="button" aria-label="关闭">×</button>
+    <div class="sakura-update-title">Sakura 有新版本</div>
+    <div class="sakura-update-text">当前 ${escapeHTML(update.currentVersion)}，最新 ${escapeHTML(update.latestVersion)}</div>
+    <div class="sakura-update-actions">
+      <a class="sakura-update-download" href="${escapeHTML(update.downloadUrl || update.releaseUrl)}" target="_blank" rel="noopener noreferrer">下载更新</a>
+      <button class="sakura-update-later" type="button">稍后</button>
+    </div>
+  `;
+
+  updateNotice.querySelector('.sakura-update-close').addEventListener('click', () => {
+    dismissUpdateNotice(update.latestVersion);
+    updateNotice.remove();
+    updateNotice = null;
+  });
+
+  updateNotice.querySelector('.sakura-update-later').addEventListener('click', () => {
+    updateNotice.remove();
+    updateNotice = null;
+  });
+
+  document.body.appendChild(updateNotice);
+}
