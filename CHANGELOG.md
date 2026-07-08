@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.4 - 2026-07-08
+
+### Added
+
+- Added Windows one-click updater scripts: `update.bat` and `update.ps1`.
+- The updater downloads the latest GitHub Release zip and syncs local extension files.
+- Stale files from older versions are removed during update while development folders such as `.git` and `dist` are preserved.
+
 ## v1.0.3 - 2026-07-08
 
 ### Fixed

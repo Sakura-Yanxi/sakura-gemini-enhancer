@@ -191,6 +191,8 @@ Sakura 的做法是：
 
 未上架 Chrome Web Store 时，扩展不能真正自动替换本地文件。Sakura 会在支持的网站上检查 GitHub 最新 Release；如果发现新版本，会在页面右下角提示并提供下载链接。
 
+Windows 用户也可以双击 `update.bat` 做本地一键更新。它会下载最新 Release、解压、同步覆盖本地扩展文件，并删除旧版残留文件；`.git`、`dist` 等开发目录会保留。更新完成后仍需在 `chrome://extensions/` 点击 Sakura 的刷新按钮。
+
 建议的调试流程：
 
 1. 修改 `.js` 或 `.css` 文件。
