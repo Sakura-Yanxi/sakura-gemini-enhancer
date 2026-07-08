@@ -117,8 +117,11 @@ async function lookupWord(word) {
 // 词组 / 句子整段翻译：依次尝试多个源，取第一个成功的
 async function translatePhrase(text) {
   const q = encodeURIComponent(text);
+  const isShortPhrase = text.split(/\s+/).length <= 4;
 
   const sources = [
+    ...(isShortPhrase ? [async () => translateWithYoudao(text)] : []),
+
     // Edge/Microsoft 翻译：先取临时 token，再请求翻译接口，作为长句主力兜底
     async () => translateWithEdge(text),
 
@@ -143,10 +146,8 @@ async function translatePhrase(text) {
       return tran;
     },
 
-    // 有道词典 fanyi 字段兜底
-    async () => (await fetchJSON(
-      `https://dict.youdao.com/jsonapi?q=${q}`
-    ))?.fanyi?.tran,
+    // 有道词典词组释义 / fanyi 字段兜底
+    async () => translateWithYoudao(text),
   ];
 
   for (const get of sources) {
@@ -155,6 +156,34 @@ async function translatePhrase(text) {
   }
 
   return null;
+}
+
+async function translateWithYoudao(text) {
+  const q = encodeURIComponent(text);
+  const data = await fetchJSON(`https://dict.youdao.com/jsonapi?q=${q}`);
+  return extractYoudaoPhrase(data);
+}
+
+function extractYoudaoPhrase(data) {
+  const fanyi = data?.fanyi?.tran;
+  if (hasChinese(fanyi)) return fanyi;
+
+  const webTranslations = data?.web_trans?.['web-translation'] || [];
+  for (const item of webTranslations) {
+    for (const tran of item.trans || []) {
+      if (hasChinese(tran.value)) return stripHTML(tran.value);
+    }
+  }
+
+  return null;
+}
+
+function stripHTML(value) {
+  return String(value || '').replace(/<[^>]*>/g, '').trim();
+}
+
+function hasChinese(value) {
+  return /[一-龥]/.test(String(value || ''));
 }
 
 async function getEdgeTranslateToken() {
@@ -191,7 +220,7 @@ async function translateWithEdge(text) {
   );
 
   const tran = data?.[0]?.translations?.[0]?.text;
-  return tran && /[一-龥]/.test(tran) ? tran : null;
+  return hasChinese(tran) ? tran : null;
 }
 
 async function checkForUpdate() {

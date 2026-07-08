@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.3 - 2026-07-08
+
+### Fixed
+
+- Added Youdao `web_trans` parsing for short phrases such as "critical mass".
+- Short phrases now try dictionary phrase entries before online machine translation.
+
 ## v1.0.2 - 2026-07-07
 
 ### Added
