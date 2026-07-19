@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.6 - 2026-07-19
+
+### Fixed
+
+- Rewrote updater script messages as ASCII-only text to avoid PowerShell parse failures caused by mojibake.
+
 ## v1.0.5 - 2026-07-19
 
 ### Added

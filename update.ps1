@@ -46,7 +46,7 @@ function Get-PackageRoot($ExtractPath) {
     Select-Object -First 1
 
   if (-not $manifest) {
-    throw '下载包里没有找到 manifest.json，更新已停止。'
+    throw 'manifest.json was not found in the downloaded package. Update stopped.'
   }
 
   return Split-Path -Parent $manifest.FullName
@@ -96,7 +96,7 @@ function Sync-PackageFiles($SourceRoot, $TargetRoot) {
 
 try {
   if (-not (Test-Path $ManifestPath)) {
-    throw "当前目录不是 Sakura 扩展目录：$Root"
+    throw "This directory is not a Sakura extension directory: $Root"
   }
 
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -104,8 +104,8 @@ try {
   $manifest = Get-Content -Raw -Encoding UTF8 $ManifestPath | ConvertFrom-Json
   $currentVersion = $manifest.version
 
-  Write-Step "当前版本：v$currentVersion"
-  Write-Step '正在检查 GitHub 最新版本...'
+  Write-Step "Current version: v$currentVersion"
+  Write-Step 'Checking latest GitHub release...'
 
   $release = Invoke-RestMethod -Uri $ReleaseApi -Headers @{
     Accept = 'application/vnd.github+json'
@@ -113,10 +113,10 @@ try {
   }
 
   $latestVersion = Normalize-Version $release.tag_name
-  Write-Step "最新版本：v$latestVersion"
+  Write-Step "Latest version: v$latestVersion"
 
   if (-not $Force -and -not (Test-NewerVersion $latestVersion $currentVersion)) {
-    Write-Done '已经是最新版本，不需要更新。'
+    Write-Done 'Already up to date.'
     exit 0
   }
 
@@ -131,7 +131,7 @@ try {
   }
 
   if (-not $asset) {
-    throw '最新 Release 没有找到可下载的 zip 包。'
+    throw 'No downloadable zip asset was found in the latest release.'
   }
 
   $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("sakura-update-" + [Guid]::NewGuid().ToString('N'))
@@ -140,34 +140,34 @@ try {
 
   New-Item -ItemType Directory -Path $extractRoot -Force | Out-Null
 
-  Write-Step "正在下载：$($asset.name)"
+  Write-Step "Downloading: $($asset.name)"
   Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -Headers @{
     'User-Agent' = 'Sakura-Updater'
   }
 
-  Write-Step '正在解压更新包...'
+  Write-Step 'Extracting update package...'
   Expand-Archive -LiteralPath $zipPath -DestinationPath $extractRoot -Force
 
   $packageRoot = Get-PackageRoot $extractRoot
 
-  Write-Step '正在同步本地扩展文件，并清理旧版残留...'
+  Write-Step 'Syncing local extension files and removing stale files...'
   Sync-PackageFiles $packageRoot $Root
 
   Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
 
-  Write-Done "已更新到 v$latestVersion。"
-  Write-Warn '还差最后一步：打开 chrome://extensions/，点击 Sakura 扩展卡片上的刷新按钮，然后刷新正在使用的网站。'
-  Write-Warn '如果你用的是 Edge，请打开 edge://extensions/。'
+  Write-Done "Updated to v$latestVersion."
+  Write-Warn 'Final step: open chrome://extensions/, click the refresh button on the Sakura extension card, then refresh the website.'
+  Write-Warn 'If you use Edge, open edge://extensions/.'
 
   try {
     Start-Process 'chrome://extensions/'
   } catch {
-    # 有些系统不允许直接打开 chrome:// URL，手动复制即可。
+    # Some systems do not allow opening chrome:// URLs directly.
   }
 } catch {
   Write-Host ''
-  Write-Host "[Sakura] 更新失败：$($_.Exception.Message)" -ForegroundColor Red
-  Write-Host '[Sakura] 可以手动到 Release 页面下载最新版：' -ForegroundColor Yellow
+  Write-Host "[Sakura] Update failed: $($_.Exception.Message)" -ForegroundColor Red
+  Write-Host '[Sakura] Manual download page:' -ForegroundColor Yellow
   Write-Host 'https://github.com/Sakura-Yanxi/sakura-gemini-enhancer/releases/latest' -ForegroundColor Yellow
   exit 1
 }
