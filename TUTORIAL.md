@@ -30,11 +30,11 @@ https://github.com/Sakura-Yanxi/sakura-gemini-enhancer
 
 1. 打开项目页面。
 2. 找到右侧或页面中的 `Releases`。
-3. 点击最新版本，例如 `Sakura v1.0.0`。
+3. 点击最新版本，例如 `Sakura v1.0.8`。
 4. 在 `Assets` 下面找到这个文件：
 
 ```text
-sakura-gemini-enhancer-v1.0.0.zip
+sakura-gemini-enhancer-v1.0.8.zip
 ```
 
 5. 点击下载。
@@ -47,7 +47,7 @@ Chrome 不能直接加载 `.zip` 文件，必须先解压。
 
 推荐这样做：
 
-1. 在下载目录找到 `sakura-gemini-enhancer-v1.0.0.zip`。
+1. 在下载目录找到 `sakura-gemini-enhancer-v1.0.8.zip`。
 2. 右键这个文件。
 3. 选择「全部解压」或「解压到当前文件夹」。
 4. 解压后得到一个文件夹。
@@ -137,7 +137,7 @@ Sakura
 - 文件有没有完整解压；
 - 文件夹里有没有 `manifest.json`；
 - Chrome 是否开启了开发者模式；
-- 下载的是否是 Release 里的 `sakura-gemini-enhancer-v1.0.0.zip`。
+- 下载的是否是 Release 里的 `sakura-gemini-enhancer-v1.0.8.zip`。
 
 ## 第七步：固定扩展图标
 
@@ -274,7 +274,7 @@ chrome://extensions/
 
 ### 我下载了源码 zip，可以安装吗？
 
-可以，但更推荐下载 Release 里的 `sakura-gemini-enhancer-v1.0.0.zip`。
+可以，但更推荐下载 Release 里的 `sakura-gemini-enhancer-v1.0.8.zip`。
 
 GitHub 页面绿色 `Code` 按钮下载的是源码压缩包，也能用，但里面可能会多一层文件夹。你仍然要选择包含 `manifest.json` 的那一层。
 

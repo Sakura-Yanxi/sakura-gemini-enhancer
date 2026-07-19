@@ -1,24 +1,17 @@
 # Changelog
 
-## v1.0.7 - 2026-07-19
+## v1.0.8 - 2026-07-19
+
+### Removed
+
+- Removed the experimental HTML / JavaScript code preview feature and its related styles.
+- Removed attempts to emulate Gemini Canvas private runtimes such as `WH.createApp`.
 
 ### Fixed
 
+- Kept visualization enhancement limited to Gemini's already-rendered iframe content.
 - Prevented Sakura content scripts from running inside iframe documents.
-- Prevented HTML preview controls from being injected into Sakura's own preview iframe.
-
-## v1.0.6 - 2026-07-19
-
-### Fixed
-
-- Rewrote updater script messages as ASCII-only text to avoid PowerShell parse failures caused by mojibake.
-
-## v1.0.5 - 2026-07-19
-
-### Added
-
-- Added HTML preview rendering for visible full HTML code blocks on Gemini / AI Studio.
-- The preview uses a sandboxed iframe and supports interactive Canvas demos generated as HTML.
+- Kept the Windows updater script messages ASCII-only to avoid PowerShell mojibake parse failures.
 
 ## v1.0.4 - 2026-07-08
 
