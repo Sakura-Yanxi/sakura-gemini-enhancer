@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sakura",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "放大 Gemini 可视化（全屏）+ 划词翻译",
   "host_permissions": [
     "https://dict.youdao.com/*",
@@ -23,6 +23,7 @@
       ],
       "js": ["content.js"],
       "css": ["content.css"],
+      "all_frames": false,
       "run_at": "document_idle"
     },
     {
@@ -38,6 +39,7 @@
       ],
       "js": ["translation.js"],
       "css": ["translation.css"],
+      "all_frames": false,
       "run_at": "document_idle"
     }
   ],

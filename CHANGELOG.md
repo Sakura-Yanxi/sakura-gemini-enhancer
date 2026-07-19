@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.7 - 2026-07-19
+
+### Fixed
+
+- Prevented Sakura content scripts from running inside iframe documents.
+- Prevented HTML preview controls from being injected into Sakura's own preview iframe.
+
 ## v1.0.6 - 2026-07-19
 
 ### Fixed

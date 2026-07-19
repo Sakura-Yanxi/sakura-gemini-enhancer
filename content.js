@@ -1,5 +1,10 @@
 // 内容脚本 - 检测 Gemini 的可视化 iframe，注入「放大」按钮
 
+if (window.top === window) {
+  initSakuraContentScript();
+}
+
+function initSakuraContentScript() {
 // 已处理过的 iframe（用元素本身标记，避免尺寸变化导致重复）
 const tagged = new WeakSet();
 const htmlPreviewTagged = new WeakSet();
@@ -90,6 +95,8 @@ const observer = new MutationObserver(() => scheduleScan());
 observer.observe(document.body, { childList: true, subtree: true });
 
 function findHTMLCodeBlocks() {
+  if (document.documentElement?.dataset?.sakuraHtmlPreview === 'true') return [];
+
   const selectors = [
     'pre',
     'code',
@@ -106,6 +113,8 @@ function findHTMLCodeBlocks() {
   const seenHosts = new WeakSet();
 
   for (const el of document.querySelectorAll(selectors)) {
+    if (el.closest('.gemini-html-preview-overlay')) continue;
+
     const text = getCodeText(el);
     if (!looksLikeRenderableHTML(text)) continue;
 
@@ -210,7 +219,7 @@ function showHTMLPreview(html) {
           <button class="gemini-html-preview-close" type="button" aria-label="关闭">×</button>
         </div>
       </div>
-      <iframe class="gemini-html-preview-frame" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
+      <iframe class="gemini-html-preview-frame" data-sakura-html-preview-frame="true" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
     </div>
   `;
 
@@ -218,7 +227,7 @@ function showHTMLPreview(html) {
 
   const frame = htmlPreviewOverlay.querySelector('.gemini-html-preview-frame');
   frame.referrerPolicy = 'no-referrer';
-  frame.srcdoc = html;
+  frame.srcdoc = injectPreviewMarker(html);
 
   htmlPreviewOverlay.querySelector('.gemini-html-preview-close').addEventListener('click', closeHTMLPreview);
   htmlPreviewOverlay.addEventListener('click', (e) => {
@@ -242,3 +251,12 @@ function closeHTMLPreview() {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeHTMLPreview();
 });
+}
+
+function injectPreviewMarker(html) {
+  const marker = '<script>document.documentElement.dataset.sakuraHtmlPreview="true";</script>';
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head([^>]*)>/i, `<head$1>${marker}`);
+  }
+  return `${marker}${html}`;
+}
