@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.5 - 2026-07-19
+
+### Added
+
+- Added HTML preview rendering for visible full HTML code blocks on Gemini / AI Studio.
+- The preview uses a sandboxed iframe and supports interactive Canvas demos generated as HTML.
+
 ## v1.0.4 - 2026-07-08
 
 ### Added

@@ -2,9 +2,10 @@
 
 Sakura 是一个轻量级 Chrome 扩展，用来增强 Gemini、Google AI Studio 以及部分 AI 对话网站的日常使用体验。
 
-它目前提供两个核心能力：
+它目前提供三个核心能力：
 
 - **可视化 iframe 全屏放大**：在 Gemini / AI Studio 生成的可交互可视化内容右上角注入「放大」按钮，点击后进入浏览器原生全屏。
+- **HTML / Canvas 代码预览**：检测 Gemini / AI Studio 页面中可见的完整 HTML 代码，提供「预览 HTML」按钮并用 sandbox iframe 渲染。
 - **划词翻译**：选中英文单词、词组或句子后，自动弹出翻译卡片。单词优先查词典，短语和句子走整段翻译。
 
 项目使用 Manifest V3，纯原生 JavaScript / CSS 实现，无构建步骤，无第三方运行依赖。
@@ -32,7 +33,18 @@ Sakura 是一个轻量级 Chrome 扩展，用来增强 Gemini、Google AI Studio
 
 这个功能主要用于查看 Gemini 生成的图表、Canvas、小游戏、HTML demo、可交互页面等内容。
 
-### 2. 划词翻译
+### 2. HTML / Canvas 代码预览
+
+适用页面：
+
+- `https://gemini.google.com/*`
+- `https://aistudio.google.com/*`
+
+当页面中出现完整 HTML 代码，例如包含 `<!DOCTYPE html>`、`<html>`、`<body>`、`<canvas>` 的代码块时，扩展会添加「预览 HTML」按钮。点击后，代码会在扩展创建的 sandbox iframe 中渲染。
+
+这个功能适合 Gemini / AI Studio 只显示 HTML 源码、但当前浏览器没有自动渲染 Canvas demo 的情况。
+
+### 3. 划词翻译
 
 适用页面：
 
@@ -94,8 +106,8 @@ Sakura 是一个轻量级 Chrome 扩展，用来增强 Gemini、Google AI Studio
 | --- | --- |
 | `manifest.json` | Chrome 扩展配置，声明 content scripts、background service worker、图标和接口权限 |
 | `background.js` | 后台 service worker，负责请求翻译和词典接口 |
-| `content.js` | Gemini / AI Studio 可视化 iframe 检测与放大按钮注入 |
-| `content.css` | iframe 放大按钮和全屏背景样式 |
+| `content.js` | Gemini / AI Studio 可视化 iframe 检测、放大按钮注入、HTML 代码预览 |
+| `content.css` | iframe 放大按钮、HTML 预览层和全屏背景样式 |
 | `translation.js` | 划词翻译弹窗逻辑、选区判断、结果渲染 |
 | `translation.css` | 翻译弹窗样式 |
 | `icons/` | 扩展图标 |
